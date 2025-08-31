@@ -15,8 +15,17 @@ from js import (
 
 def monkey_patch_time():
     if not hasattr(time, "ticks_us"):
-        # pyscript doesn't have time.ticks_us, so we monkey patch it
         time.ticks_us = lambda: int(time.time_ns() / 1000)
+
+    if not hasattr(time, "ticks_diff"):
+        time.ticks_diff = lambda a, b: a - b
+
+    if not hasattr(time, "ticks_ms"):
+        time.ticks_ms = lambda: int(time.time_ns() / 1_000_000)
+
+    if not hasattr(time, "ticks_add"):
+        time.ticks_add = lambda a, b: a + b
+
 
 def monkey_patch_display():
     # In Tildagon OS, display is a module with a set of functions.
@@ -26,6 +35,10 @@ def monkey_patch_display():
         @staticmethod
         def gfx_init():
             print("Fake gfx_init()")
+
+        @staticmethod
+        def hexagon(ctx, x, y, dim):
+            print("Not implemented: FakeDisplay: hexagon(%s, %s, %s)" % (x, y, dim))
 
     sys.modules["display"] = FakeDisplay
 

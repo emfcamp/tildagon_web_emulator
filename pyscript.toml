@@ -24,8 +24,12 @@ packages = []
 "./app_components/dialog.py" = "app_components/dialog.py"
 "./app_components/menu.py" = "app_components/menu.py"
 "./app_components/tokens.py" = "app_components/tokens.py"
+"./app_components/background.py" = "app_components/background.py"
 
 "./system/__init__.py" = "system/__init__.py"
+
+"./system/backgrounds/emflogo.py" = "system/backgrounds/emflogo.py"
+"./system/backgrounds/wigglinghexagons.py" = "system/backgrounds/wigglinghexagons.py"
 
 "./system/scheduler/__init__.py" = "system/scheduler/__init__.py"
 "./system/scheduler/events.py" = "system/scheduler/events.py"
@@ -44,6 +48,9 @@ packages = []
 "./system/patterndisplay/app.py" = "system/patterndisplay/app.py"
 "./system/patterndisplay/events.py" = "system/patterndisplay/events.py"
 
+"./system/launcher/__init__.py" = "system/launcher/__init__.py"
+"./system/launcher/app.py" = "system/launcher/app.py"
+
 "./system/eventbus.py" = "system/eventbus.py"
 
 "./events/__init__.py" = "events/__init__.py"
@@ -57,3 +64,18 @@ packages = []
 "./patterns/flash.py" = "patterns/flash.py"
 "./patterns/off.py" = "patterns/off.py"
 "./patterns/rainbow.py" = "patterns/rainbow.py"
+
+"./firmware_apps/__init__.py" = "firmware_apps/__init__.py"
+"./firmware_apps/intro_app.py" = "firmware_apps/intro_app.py"
+"./firmware_apps/poweroff.py" = "firmware_apps/poweroff.py"
+"./firmware_apps/text_demo.py" = "firmware_apps/text_demo.py"
+"./firmware_apps/app_store.py" = "firmware_apps/app_store.py"
+"./firmware_apps/menu_demo.py" = "firmware_apps/menu_demo.py"
+"./firmware_apps/settings_app.py" = "firmware_apps/settings_app.py"
+"./firmware_apps/tick_app.py" = "firmware_apps/tick_app.py"
+"./firmware_apps/basic_app.py" = "firmware_apps/basic_app.py"
+"./firmware_apps/patterninhibit.py" = "firmware_apps/patterninhibit.py"
+"./firmware_apps/sponsors.py" = "firmware_apps/sponsors.py"
+"./firmware_apps/hexpansion_test.py" = "firmware_apps/hexpansion_test.py"
+"./firmware_apps/pingpong_app.py" = "firmware_apps/pingpong_app.py"
+"./firmware_apps/test_app.py" = "firmware_apps/test_app.py"
