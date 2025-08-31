@@ -16,6 +16,8 @@ packages = []
 "./sys_display.py" = "sys_display.py"
 "./vfs.py" = "vfs.py"
 "./settings.py" = "settings.py"
+"./power.py" = "power.py"
+"./power_event.py" = "power_event.py"
 
 "./app_components/__init__.py" = "app_components/__init__.py"
 "./app_components/layout.py" = "app_components/layout.py"
@@ -43,6 +45,7 @@ packages = []
 
 "./system/notification/__init__.py" = "system/notification/__init__.py"
 "./system/notification/events.py" = "system/notification/events.py"
+"./system/notification/app.py" = "system/notification/app.py"
 
 "./system/patterndisplay/__init__.py" = "system/patterndisplay/__init__.py"
 "./system/patterndisplay/app.py" = "system/patterndisplay/app.py"
@@ -50,6 +53,11 @@ packages = []
 
 "./system/launcher/__init__.py" = "system/launcher/__init__.py"
 "./system/launcher/app.py" = "system/launcher/app.py"
+
+"./system/power/__init__.py" = "system/power/__init__.py"
+"./system/power/app.py" = "system/power/app.py"
+"./system/power/events.py" = "system/power/events.py"
+"./system/power/handler.py" = "system/power/handler.py"
 
 "./system/eventbus.py" = "system/eventbus.py"
 
