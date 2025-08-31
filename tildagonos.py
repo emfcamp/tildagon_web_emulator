@@ -1,6 +1,6 @@
 from machine import Pin, I2C, SPI
 import neopixel, time
-import leds
+#import leds
 import sys_display
 
 BUS_SYSTEM=7

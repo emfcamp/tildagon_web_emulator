@@ -174,18 +174,21 @@ def monkey_patch_ePin():
 def monkey_patch_neopixel():
     class FakeNeoPixel:
         def __init__(self, *args, **kwargs):
-            self.length = 6
-            self.rgb = [(0,0,0)] * 6
+            self.length = 12
+            self.rgb = [(0,0,0)] * self.length
 
         def write(self):
             for led in range(self.length):
+                print(f" Writing LED {led}: {self.rgb[led]}")
                 canvas = pydom[f"#led{led} canvas"][0]
                 ctx = canvas._js.getContext("2d")
-                ctx.fillStyle = f"rgb{self.rgb[led]}"
+                style = f"rgb({self.rgb[led][0]} {self.rgb[led][1]} {self.rgb[led][2]})"
+                ctx.fillStyle = style
                 ctx.beginPath()
                 ctx.arc(10, 10, 10, 0, 2 * math.pi)
                 ctx.fill()
                 ctx.closePath()
+                canvas.style["display"] = "block"
 
         def fill(self, color):
             print("Not yet implemented: FakeNeoPixel: fill", color)
@@ -194,7 +197,7 @@ def monkey_patch_neopixel():
             if item > self.length:
                 print("FakeNeoPixel: Ignoring setitem out of range", item)
             else:
-                self.rgb[item] = value
+                self.rgb[item-1] = value
             
 
     class FakeNeoPixelModule:
@@ -215,7 +218,7 @@ async def badge():
         ctx = canvas._js.getContext("2d")
         ctx.fillStyle = "rgb(100 100 100)"
         ctx.beginPath()
-        ctx.arc(10, 10, 10, 0, 2 * math.pi)
+        ctx.arc(10, 10, 5, 0, 2 * math.pi)
         ctx.fill()
         ctx.closePath()
         canvas.style["display"] = "block"
