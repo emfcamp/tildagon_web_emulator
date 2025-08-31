@@ -1,0 +1,34 @@
+name = "Tildagon badge simpulator"
+description = "A simple simulator for Tildagon badges"
+author = "Duncan Thomas <duncan.thomas@gmail.com"
+packages = []
+
+[files]
+"./main.py" = "main.py"
+"./async_queue.py" = "async_queue.py"
+"./perf_timer.py" = "perf_timer.py"
+"./app.py" = "app.py"
+
+"./system/__init__.py" = "system/__init__.py"
+
+"./system/scheduler/__init__.py" = "system/scheduler/__init__.py"
+"./system/scheduler/events.py" = "system/scheduler/events.py"
+
+"./system/hexpansion/__init__.py" = "system/hexpansion/__init__.py"
+"./system/hexpansion/app.py" = "system/hexpansion/app.py"
+"./system/hexpansion/config.py" = "system/hexpansion/config.py"
+"./system/hexpansion/events.py" = "system/hexpansion/events.py"
+"./system/hexpansion/header.py" = "system/hexpansion/header.py"
+"./system/hexpansion/util.py" = "system/hexpansion/util.py"
+
+"./system/notification/__init__.py" = "system/notification/__init__.py"
+"./system/notification/events.py" = "system/notification/events.py"
+
+
+"./system/eventbus.py" = "system/eventbus.py"
+
+"./events/__init__.py" = "events/__init__.py"
+"./events/input.py" = "events/input.py"
+
+"./frontboards/__init__.py" = "frontboards/__init__.py"
+"./frontboards/twentyfour.py" = "frontboards/twentyfour.py"

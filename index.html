@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Recommended meta tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+    <!-- PyScript CSS -->
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
+    <!-- CSS for examples -->
+    <link rel="stylesheet" href="./assets/css/examples.css" />
+
+    <!-- This script tag bootstraps PyScript -->
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+
+    <title>Tildagon simulator</title>
+    <link rel="icon" type="image/png" href="./assets/favicon.png" />
+
+    <!-- style for spinner and canvas -->
+    <style>
+      .loading {
+        display: inline-block;
+        width: 50px;
+        height: 50px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: black;
+        animation: spin 1s ease-in-out infinite;
+      }
+
+      canvas {
+        display: none;
+      }
+
+      @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+  </head>
+
+  <body>
+    <dialog id="loading">
+      <h1>Loading...</h1>
+    </dialog>
+
+    <nav class="navbar" style="background-color: #000000">
+      <div class=app-header>
+        <a href="/">
+          <img src="./assets/logo.png" alt="Tildagon Logo" class="logo" />
+        </a>
+        <a class="app-title" href="/">Tildagon Simulator</a>
+      </div>
+    </nav>
+
+    <section class="pyscript">
+      <div style="display: flex; flex-direction: column; gap: 1em; width: 600px;">
+        <div id="led0">
+          <canvas id="led0" width=20 height=20></canvas>
+        </div>
+        <div id="led1">
+          <canvas id="led1" width=20 height=20></canvas>
+        </div>
+        <div id="led2">
+          <canvas id="led2" width=20 height=20></canvas>
+        </div>
+        <div id="led3">
+          <canvas id="led3" width=20 height=20></canvas>
+        </div>
+        <div id="led4">
+          <canvas id="led4" width=20 height=20></canvas>
+        </div>
+        <div id="led5">
+          <canvas id="led5" width=20 height=20></canvas>
+        </div>
+        </div>
+        <div id="screen">
+          <canvas></canvas>
+        </div>
+      </div>
+
+      <script type="py" src="./pyscript_main.py" config="./pyscript.toml"></script>
+    </section>
+
+  </body>
+</html>
+
