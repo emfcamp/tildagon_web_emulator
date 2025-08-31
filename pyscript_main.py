@@ -38,20 +38,39 @@ def monkey_patch_machine():
         def value(self):
             return 0
 
-    class FakeMachine:
-        @staticmethod
-        def Pin(pin, mode):
-            return FakePin(pin, mode)
-
     class FakeI2C:
         pass
 
-    sys.modules["machine"] = FakeMachine
-    sys.modules["machine.I2C"] = FakeI2C
+    class FakeSPI:
+        pass
 
-def monkey_patch_tildagon_ePin():
+    from types import ModuleType
+    m = ModuleType("machine")
+    sys.modules[m.__name__] = m
+
+    sys.modules["machine.I2C"] = FakeI2C
+    sys.modules["machine.SPI"] = FakeSPI
+    sys.modules["machine.Pin"] = FakePin
+
+
+def monkey_patch_tildagon():
     from types import ModuleType
     m = ModuleType("tildagon")
+    sys.modules[m.__name__] = m
+
+    class FakeEPin:
+        pass
+
+    class FakePin:
+        pass
+
+
+    sys.modules["tildagon.ePin"] = FakeEPin
+    sys.modules["tildagon.Pin"] = FakePin
+
+def monkey_patch_ePin():
+    from types import ModuleType
+    m = ModuleType("egpio")
     sys.modules[m.__name__] = m
 
     class FakeEPin:
@@ -76,15 +95,34 @@ def monkey_patch_tildagon_ePin():
             pass
 
         def value(self, value=None):
-            if value == None:
-                # FIXME: Hook this up to the on-screen buttons
-                return 1
+            return 1
 
         def irq(self, handler, trigger):
             pass
 
+    sys.modules["egpio.ePin"] = FakeEPin
 
-    sys.modules["tildagon.ePin"] = FakeEPin
+
+def monkey_patch_neopixel():
+    class FakeNeoPixel:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def write(self):
+            # Fixme: Hook this up to the on-screen LEDs
+            pass
+
+        def fill(self, color):
+            # Fixme: Hook this up to the on-screen LEDs
+            pass
+
+        def __setitem__(self, item, value):
+            print("Not implemented: FakeNeoPixel: __setitem__(%s, %s)" % (item, value))
+
+    class FakeNeoPixelModule:
+        NeoPixel = FakeNeoPixel
+
+    sys.modules["neopixel"] = FakeNeoPixelModule
 
 async def badge():
     resolution_x = 240
@@ -154,7 +192,9 @@ async def start_tildagon_os():
     monkey_patch_time()
     monkey_patch_display()
     monkey_patch_machine()
-    monkey_patch_tildagon_ePin()
+    monkey_patch_tildagon()
+    monkey_patch_neopixel()
+    monkey_patch_ePin()
 
     import main
     # Everything gets started on the import above

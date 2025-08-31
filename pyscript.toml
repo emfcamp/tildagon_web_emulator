@@ -8,6 +8,22 @@ packages = []
 "./async_queue.py" = "async_queue.py"
 "./perf_timer.py" = "perf_timer.py"
 "./app.py" = "app.py"
+"./eeprom_i2c.py" = "eeprom_i2c.py"
+"./eeprom_partition.py" = "eeprom_partition.py"
+"./tildagonos.py" = "tildagonos.py"
+"./leds.py" = "leds.py"
+"./sys_colors.py" = "sys_colors.py"
+"./sys_display.py" = "sys_display.py"
+"./vfs.py" = "vfs.py"
+"./settings.py" = "settings.py"
+
+"./app_components/__init__.py" = "app_components/__init__.py"
+"./app_components/layout.py" = "app_components/layout.py"
+"./app_components/notification.py" = "app_components/notification.py"
+"./app_components/utils.py" = "app_components/utils.py"
+"./app_components/dialog.py" = "app_components/dialog.py"
+"./app_components/menu.py" = "app_components/menu.py"
+"./app_components/tokens.py" = "app_components/tokens.py"
 
 "./system/__init__.py" = "system/__init__.py"
 
@@ -24,6 +40,9 @@ packages = []
 "./system/notification/__init__.py" = "system/notification/__init__.py"
 "./system/notification/events.py" = "system/notification/events.py"
 
+"./system/patterndisplay/__init__.py" = "system/patterndisplay/__init__.py"
+"./system/patterndisplay/app.py" = "system/patterndisplay/app.py"
+"./system/patterndisplay/events.py" = "system/patterndisplay/events.py"
 
 "./system/eventbus.py" = "system/eventbus.py"
 
@@ -32,3 +51,9 @@ packages = []
 
 "./frontboards/__init__.py" = "frontboards/__init__.py"
 "./frontboards/twentyfour.py" = "frontboards/twentyfour.py"
+
+"./patterns/base.py" = "patterns/base.py"
+"./patterns/cylon.py" = "patterns/cylon.py"
+"./patterns/flash.py" = "patterns/flash.py"
+"./patterns/off.py" = "patterns/off.py"
+"./patterns/rainbow.py" = "patterns/rainbow.py"
