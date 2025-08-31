@@ -37,11 +37,29 @@ class FakeCtx:
     def __init__(self):
         self.width = 240
         self.height = 240
+        self.scale = 3 # The number of web pixels per "display" pixel
+        self.border = 10
 
         self.CENTER = 1
         self.LEFT = 2
         self.RIGHT = 3
         self.MIDDLE = 4
+
+        self.color = "rgb(0, 255, 0)" # FIXME: find what the default color is
+        self.position = (0, 0)
+        self._rectange = None
+
+    def _x_to_web(self, x):
+        return ((x + self.width // 2) * self.scale) + self.border
+
+    def _y_to_web(self, y):
+        return ((y + self.height // 2) * self.scale) + self.border
+
+    def clone(self):
+        ctx = FakeCtx()
+        ctx.color = self.color
+        ctx.position = self.position
+        return ctx
 
     def save(self):
         print("Not implemented: FakeCtx: save()")
@@ -50,27 +68,91 @@ class FakeCtx:
         print("Not implemented: FakeCtx: restore()")
 
     def move_to(self, x, y):
-        print("Not implemented: FakeCtx: move_to(%s, %s)" % (x, y))
-        return self
+        print("ctx.move_to(%s, %s)" % (x, y))
+        new = self.clone()
+        new.position = (x, y)
+        return new
 
     def rgb(self, r, g, b):
-        print("Not implemented: FakeCtx: rgb(%f, %f, %f)" % (r, g, b))
-        return self
+        new = self.clone()
+        new.color = f"rgb({r}, {g}, {b})"
+        return new
 
     def rectangle(self, x, y, w, h):
-        print("Not implemented: FakeCtx: rectangle(%s, %s, %s, %s)" % (x, y, w, h))
+        canvas = pydom["#screen canvas"][0]
+        ctx = canvas._js.getContext("2d")
+        ctx.save()
+        ctx.beginPath()
+        ctx.arc(
+            (3 * self.width + 2 * self.border) / 2,
+            (3 * self.height + 2 * self.border) / 2,
+            (3 * self.width) / 2,
+            0,
+            2 * math.pi,
+        )
+        ctx.closePath()
+        ctx.clip()
+
+        ctx.fillStyle = self.color
+        ctx.strokeStyle = self.color
+        ctx.beginPath()
+        ctx.rect(self._x_to_web(x), self._y_to_web(y), w * self.scale, h * self.scale)
+        ctx.stroke()
+        ctx.restore()
+
+        # We need to stash the rectable for fill()
+        self._rectangle = (x, y, w, h)
         return self
 
     def fill(self):
-        print("Not implemented: FakeCtx: fill()")
+        if self._rectangle:
+            x, y, w, h = self._rectangle
+            canvas = pydom["#screen canvas"][0]
+            ctx = canvas._js.getContext("2d")
+            ctx.save()
+            ctx.beginPath()
+            ctx.arc(
+                (3 * self.width + 2 * self.border) / 2,
+                (3 * self.height + 2 * self.border) / 2,                                        (3 * self.width) / 2,                                                           0,                                                                              2 * math.pi,                                                                )
+            ctx.closePath()
+            ctx.clip()
+
+            ctx.fillStyle = self.color
+            ctx.fillRect(self._x_to_web(x), self._y_to_web(y), w * self.scale, h * self.scale)
+            ctx.restore()
+
+            self._rectangle = None
+        else:
+            print("FakeCtx: fill() called without a rectangle")
+
         return self
 
     def text_width(self, text):
-        print("Not implemented: FakeCtx: text_width(%s)" % text)
+        print("Not properly implemented: FakeCtx: text_width(%s)" % text)
         return len(text) * 8
 
     def text(self, text):
-        print("Not implemented: FakeCtx: text(%s)" % text)
+        canvas = pydom["#screen canvas"][0]
+        ctx = canvas._js.getContext("2d")
+        ctx.save()
+        ctx.beginPath()
+        ctx.arc(
+            (3 * self.width + 2 * self.border) / 2,
+            (3 * self.height + 2 * self.border) / 2,
+            (3 * self.width) / 2,
+            0,
+            2 * math.pi,
+        )
+        ctx.closePath()
+        ctx.clip()
+
+        ctx.fillStyle = self.color
+        ctx.font = f"{8 * self.scale}px sans-serif"
+        x, y = self.position
+        print("Drawing text at", self._x_to_web(x), self._y_to_web(y), "in color", self.color)
+        ctx.fillText(text, self._x_to_web(x), self._y_to_web(y))
+        ctx.restore()
+
         return self
 
 
@@ -179,7 +261,6 @@ def monkey_patch_neopixel():
 
         def write(self):
             for led in range(self.length):
-                print(f" Writing LED {led}: {self.rgb[led]}")
                 canvas = pydom[f"#led{led} canvas"][0]
                 ctx = canvas._js.getContext("2d")
                 style = f"rgb({self.rgb[led][0]} {self.rgb[led][1]} {self.rgb[led][2]})"
