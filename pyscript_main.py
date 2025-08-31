@@ -13,6 +13,13 @@ from js import (
     console
 )
 
+def monkey_patch_sys():
+    if not hasattr(sys, "print_exception"):
+        def print_exception(e, file):
+            print("Exception:", e, file=file)
+        sys.print_exception = print_exception
+
+
 def monkey_patch_time():
     if not hasattr(time, "ticks_us"):
         time.ticks_us = lambda: int(time.time_ns() / 1000)
@@ -25,6 +32,46 @@ def monkey_patch_time():
 
     if not hasattr(time, "ticks_add"):
         time.ticks_add = lambda a, b: a + b
+
+class FakeCtx:
+    def __init__(self):
+        self.width = 240
+        self.height = 240
+
+        self.CENTER = 1
+        self.LEFT = 2
+        self.RIGHT = 3
+        self.MIDDLE = 4
+
+    def save(self):
+        print("Not implemented: FakeCtx: save()")
+
+    def restore(self):
+        print("Not implemented: FakeCtx: restore()")
+
+    def move_to(self, x, y):
+        print("Not implemented: FakeCtx: move_to(%s, %s)" % (x, y))
+        return self
+
+    def rgb(self, r, g, b):
+        print("Not implemented: FakeCtx: rgb(%f, %f, %f)" % (r, g, b))
+        return self
+
+    def rectangle(self, x, y, w, h):
+        print("Not implemented: FakeCtx: rectangle(%s, %s, %s, %s)" % (x, y, w, h))
+        return self
+
+    def fill(self):
+        print("Not implemented: FakeCtx: fill()")
+        return self
+
+    def text_width(self, text):
+        print("Not implemented: FakeCtx: text_width(%s)" % text)
+        return len(text) * 8
+
+    def text(self, text):
+        print("Not implemented: FakeCtx: text(%s)" % text)
+        return self
 
 
 def monkey_patch_display():
@@ -39,6 +86,14 @@ def monkey_patch_display():
         @staticmethod
         def hexagon(ctx, x, y, dim):
             print("Not implemented: FakeDisplay: hexagon(%s, %s, %s)" % (x, y, dim))
+
+        @staticmethod
+        def get_ctx():
+            return FakeCtx()
+
+        @staticmethod
+        def end_frame(ctx):
+            print("Not implemented: FakeDisplay: end_frame()")
 
     sys.modules["display"] = FakeDisplay
 
@@ -119,18 +174,28 @@ def monkey_patch_ePin():
 def monkey_patch_neopixel():
     class FakeNeoPixel:
         def __init__(self, *args, **kwargs):
-            pass
+            self.length = 6
+            self.rgb = [(0,0,0)] * 6
 
         def write(self):
-            # Fixme: Hook this up to the on-screen LEDs
-            pass
+            for led in range(self.length):
+                canvas = pydom[f"#led{led} canvas"][0]
+                ctx = canvas._js.getContext("2d")
+                ctx.fillStyle = f"rgb{self.rgb[led]}"
+                ctx.beginPath()
+                ctx.arc(10, 10, 10, 0, 2 * math.pi)
+                ctx.fill()
+                ctx.closePath()
 
         def fill(self, color):
-            # Fixme: Hook this up to the on-screen LEDs
-            pass
+            print("Not yet implemented: FakeNeoPixel: fill", color)
 
         def __setitem__(self, item, value):
-            print("Not implemented: FakeNeoPixel: __setitem__(%s, %s)" % (item, value))
+            if item > self.length:
+                print("FakeNeoPixel: Ignoring setitem out of range", item)
+            else:
+                self.rgb[item] = value
+            
 
     class FakeNeoPixelModule:
         NeoPixel = FakeNeoPixel
@@ -208,6 +273,7 @@ async def start_tildagon_os():
     monkey_patch_tildagon()
     monkey_patch_neopixel()
     monkey_patch_ePin()
+    monkey_patch_sys()
 
     import main
     # Everything gets started on the import above
