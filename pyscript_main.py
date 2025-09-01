@@ -15,6 +15,15 @@ from js import (
 )
 
 
+def monkey_patch_micropython():
+    class FakeMicropython:
+        @staticmethod
+        def const(x):
+            return x
+
+    sys.modules["micropython"] = FakeMicropython
+
+
 async def monkey_patch_http():
     # requests doesn't work in pyscript without this voodoo
 
@@ -479,6 +488,7 @@ async def start_tildagon_os():
     monkey_patch_sys()
     monkey_patch_network()
     monkey_patch_tildagon_helpers()
+    monkey_patch_micropython()
     await monkey_patch_http()
 
     import main
