@@ -269,10 +269,18 @@ def monkey_patch_display():
 
     sys.modules["display"] = FakeDisplay
 
+    class FakeGC9A01PY:
+        pass
+
+    sys.modules["gc9a01py"] = FakeGC9A01PY
+
 
 def monkey_patch_machine():
     class FakePin:
-        def __init__(self, pin, mode):
+        IN = 1
+        OUT = 2
+
+        def __init__(self, pin, mode=None):
             self.pin = pin
             self.mode = mode
 
@@ -300,10 +308,18 @@ def monkey_patch_tildagon():
     sys.modules[m.__name__] = m
 
     class FakeEPin:
-        pass
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __call__(self, *args, **kwargs):
+            pass
 
     class FakePin:
-        pass
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __call__(self, *args, **kwargs):
+            pass
 
     sys.modules["tildagon.ePin"] = FakeEPin
     sys.modules["tildagon.Pin"] = FakePin
@@ -339,6 +355,9 @@ def monkey_patch_ePin():
             return 1
 
         def irq(self, handler, trigger):
+            pass
+
+        def __call__(self, *args, **kwargs):
             pass
 
     sys.modules["egpio.ePin"] = FakeEPin
