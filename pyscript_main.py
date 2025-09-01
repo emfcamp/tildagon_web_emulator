@@ -19,6 +19,67 @@ def monkey_patch_sys():
             print("Exception:", e, file=file)
         sys.print_exception = print_exception
 
+def monkey_patch_tildagon_helpers():
+    class FakeHelpers:
+        @staticmethod
+        def esp_wifi_set_max_tx_power(*args, **kwargs):
+            pass
+
+        @staticmethod
+        def esp_wifi_sta_wpa2_ent_set_identity(*args, **kwargs):
+            pass
+
+        @staticmethod
+        def esp_wifi_sta_wpa2_ent_set_username(*args, **kwargs):
+            pass
+
+        @staticmethod
+        def esp_wifi_sta_wpa2_ent_set_password(*args, **kwargs):
+            pass
+
+    sys.modules["tildagon_helpers"] = FakeHelpers
+
+
+def monkey_patch_network():
+    class FakeNetwork:
+        STA_IF = 0
+        AP_IF = 1
+
+        class FakeWLAN:
+            def __init__(self, interface):
+                self.interface = interface
+                self._active = False
+                self._connected = False
+
+            def active(self, is_active=None):
+                if is_active is None:
+                    return self._active
+                else:
+                    self._active = is_active
+
+            def connect(self, ssid, password):
+                print(f"Fake connect to SSID {ssid} with password {password}")
+                self._connected = True
+
+            def disconnect(self):
+                print("Fake disconnect")
+                self._connected = False
+
+            def isconnected(self):
+                return self._connected
+
+            def status(self):
+                if not self._active:
+                    return 0
+        
+        def __init__(self):
+            pass
+
+        def WLAN(self, interface):
+            return self.FakeWLAN(interface)
+
+    sys.modules["network"] = FakeNetwork()
+
 
 def monkey_patch_time():
     if not hasattr(time, "ticks_us"):
@@ -358,6 +419,8 @@ async def start_tildagon_os():
     monkey_patch_neopixel()
     monkey_patch_ePin()
     monkey_patch_sys()
+    monkey_patch_network()
+    monkey_patch_tildagon_helpers()
 
     import main
     # Everything gets started on the import above
