@@ -20,7 +20,7 @@ packages = []
 "./badge-2024-software/sim/fakes/power_event.py" = "power_event.py"
 "./badge-2024-software/modules/wifi.py" = "wifi.py"
 "./badge-2024-software/sim/fakes/esp32.py" = "esp32.py"
-"./badge-2024-software/modules/async_helpers.py" = "async_helpers.py"
+"./async_helpers.py" = "async_helpers.py"
 
 "./badge-2024-software/modules/app_components/__init__.py" = "app_components/__init__.py"
 "./badge-2024-software/modules/app_components/layout.py" = "app_components/layout.py"
