@@ -1,7 +1,7 @@
 Instructions:
 
 ```
-git clone https://github.com/Funcan/tildagon_web_emulator
+git clone --recurse-submodules --remote-submodules https://github.com/Funcan/tildagon_web_emulator
 cd tildagon_web_emulator
 python3 -m http.server
 ```
