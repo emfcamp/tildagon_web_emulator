@@ -4,8 +4,8 @@ import sys
 import time
 
 from pyweb import pydom
-from pyscript import when
-from pyodide.ffi import to_js
+from pyscript import when, document
+from pyodide.ffi import to_js, create_proxy
 from js import (
     CanvasRenderingContext2D as Context2d,
     ImageData,
@@ -134,13 +134,33 @@ class FakeCtx:
 
         self.color = "rgb(0, 255, 0)"   # FIXME: find what the default color is
         self.position = (0, 0)
-        self._rectange = None
+        self._translate = (0, 0)
+        self._saves = []
+
+        self._canvas = pydom["#screen canvas"][0]
+        self._ctx = self._canvas._js.getContext("2d")
+
+        self._ctx.beginPath()
+        self._ctx.arc(
+            (3 * self.width + 2 * self.border) / 2,
+            (3 * self.height + 2 * self.border) / 2,
+            (3 * self.width) / 2,
+            0,
+            2 * math.pi,
+        )
+        self._ctx.closePath()
+        self._ctx.clip()
 
     def _x_to_web(self, x):
-        return ((x + self.width // 2) * self.scale) + self.border
+        return ((x + self._translate[0] + self.width // 2) * self.scale) + self.border
 
     def _y_to_web(self, y):
-        return ((y + self.height // 2) * self.scale) + self.border
+        return ((y + self._translate[1] + self.height // 2) * self.scale) + self.border
+
+    def translate(self, x, y):
+        new = self.clone()
+        new._translate = (x, y)
+        return new
 
     def clone(self):
         ctx = FakeCtx()
@@ -154,12 +174,16 @@ class FakeCtx:
         return new
 
     def save(self):
-#        print("Not implemented: FakeCtx: save()")
-        pass
+        new = self.clone()
+        new._saves.append(self)
+        return new
 
     def restore(self):
-#        print("Not implemented: FakeCtx: restore()")
-        pass
+        if len(self._saves) > 0:
+            return self._saves.pop()
+        else:
+#            print("Warning: restore() called with no matching save()")
+            return self
 
     def move_to(self, x, y):
 #        print("ctx.move_to(%s, %s)" % (x, y))
@@ -172,56 +196,27 @@ class FakeCtx:
         new.color = f"rgb({r}, {g}, {b})"
         return new
 
+    def rgba(self, r, g, b, a):
+        new = self.clone()
+        new.color = f"rgba({r}, {g}, {b}, {a})"
+        return new
+
     def rectangle(self, x, y, w, h):
-        canvas = pydom["#screen canvas"][0]
-        ctx = canvas._js.getContext("2d")
-        ctx.save()
-        ctx.beginPath()
-        ctx.arc(
-            (3 * self.width + 2 * self.border) / 2,
-            (3 * self.height + 2 * self.border) / 2,
-            (3 * self.width) / 2,
-            0,
-            2 * math.pi,
-        )
-        ctx.closePath()
-        ctx.clip()
+        ctx = self._ctx
 
         ctx.fillStyle = self.color
         ctx.strokeStyle = self.color
         ctx.beginPath()
         ctx.rect(self._x_to_web(x), self._y_to_web(y), w * self.scale, h * self.scale)
         ctx.stroke()
-        ctx.restore()
 
-        # We need to stash the rectable for fill()
-        self._rectangle = (x, y, w, h)
         return self
 
     def fill(self):
-        if self._rectangle:
-            x, y, w, h = self._rectangle
-            canvas = pydom["#screen canvas"][0]
-            ctx = canvas._js.getContext("2d")
-            ctx.save()
-            ctx.beginPath()
-            ctx.arc(
-                (3 * self.width + 2 * self.border) / 2,
-                (3 * self.height + 2 * self.border) / 2,
-                (3 * self.width) / 2,
-                0,
-                2 * math.pi,
-            )
-            ctx.closePath()
-            ctx.clip()
+        ctx = self._ctx
 
-            ctx.fillStyle = self.color
-            ctx.fillRect(self._x_to_web(x), self._y_to_web(y), w * self.scale, h * self.scale)
-            ctx.restore()
-
-            self._rectangle = None
-        else:
-            print("FakeCtx: fill() called without a rectangle")
+        ctx.fillStyle = self.color
+        ctx.fill()
 
         return self
 
@@ -230,19 +225,7 @@ class FakeCtx:
         return len(text) * 8
 
     def text(self, text):
-        canvas = pydom["#screen canvas"][0]
-        ctx = canvas._js.getContext("2d")
-        ctx.save()
-        ctx.beginPath()
-        ctx.arc(
-            (3 * self.width + 2 * self.border) / 2,
-            (3 * self.height + 2 * self.border) / 2,
-            (3 * self.width) / 2,
-            0,
-            2 * math.pi,
-        )
-        ctx.closePath()
-        ctx.clip()
+        ctx = self._ctx
 
         ctx.fillStyle = self.color
         ctx.font = f"{8 * self.scale}px sans-serif"
@@ -251,6 +234,11 @@ class FakeCtx:
         ctx.fillText(text, self._x_to_web(x), self._y_to_web(y))
         ctx.restore()
 
+        return self
+
+    def clip(self):
+        ctx = self._ctx
+        ctx.clip()
         return self
 
 
@@ -476,6 +464,28 @@ async def button_handler(event):
     print("Emitting ButtonDownEvent for button", BUTTONS[event.target.id])
     await eventbus.emit_async(ButtonDownEvent(button=BUTTONS[event.target.id]))
 
+@create_proxy
+async def on_key_down(event):
+
+    from system.eventbus import eventbus
+    from frontboards.twentyfour import BUTTONS
+    from events.input import ButtonDownEvent, ButtonUpEvent
+    match event.key:
+        case "ArrowUp":
+            print("Emitting ButtonDownEvent for button A")
+            await eventbus.emit_async(ButtonDownEvent(button=BUTTONS["A"]))
+        case "ArrowDown":
+            print("Emitting ButtonDownEvent for button D")
+            await eventbus.emit_async(ButtonDownEvent(button=BUTTONS["D"]))
+        case "ArrowLeft":
+            print("Emitting ButtonDownEvent for button F")
+            await eventbus.emit_async(ButtonDownEvent(button=BUTTONS["F"]))
+        case "ArrowRight":
+            print("Emitting ButtonDownEvent for button C")
+            await eventbus.emit_async(ButtonDownEvent(button=BUTTONS["C"]))
+        case _:
+            print("Key down:", event.key, "code:", event.code)
+
 
 async def start_tildagon_os():
     # Fix up differences between MicroPython and PyScript
@@ -490,6 +500,8 @@ async def start_tildagon_os():
     monkey_patch_tildagon_helpers()
     monkey_patch_micropython()
     await monkey_patch_http()
+
+    document.addEventListener("keydown", on_key_down)
 
     import main
     # Everything gets started on the import above
