@@ -23,6 +23,16 @@ def monkey_patch_micropython():
 
     sys.modules["micropython"] = FakeMicropython
 
+def patch_filesystem():
+    # New apps are downloaded to /apps and /backgrounds
+    # It's hardcoded. We need to make sure files out of those
+    # directories are importable.
+    import os
+    os.mkdir("/apps")
+    os.symlink("/apps", "/home/pyodide/apps")
+
+    os.mkdir("/backgrounds")
+    os.symlink("/backgrounds", "/home/pyodide/backgrounds")
 
 async def monkey_patch_http():
     # requests doesn't work in pyscript without this voodoo
@@ -33,6 +43,22 @@ async def monkey_patch_http():
 
     import pyodide_http
     pyodide_http.patch_all()
+
+    import requests
+
+    # Ok, now we need to route requests through our proxy URL
+    def get(url, *args, **kwargs):
+        print("Requests.get(", url, args, kwargs, ")")
+        url = "http://localhost:8000/proxy/" + url
+        print("Request rewritten to", url)
+        try:
+            return requests.real_get(url, *args, **kwargs)
+        except Exception as e:
+            print("Exception in requests.get:", e)
+            raise
+
+    requests.real_get = requests.get
+    requests.get = get
 
 
 def monkey_patch_sys():
@@ -500,6 +526,7 @@ async def start_tildagon_os():
     monkey_patch_tildagon_helpers()
     monkey_patch_micropython()
     await monkey_patch_http()
+    patch_filesystem()
 
     document.addEventListener("keydown", on_key_down)
 
