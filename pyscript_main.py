@@ -22,6 +22,9 @@ def monkey_patch_micropython():
             return x
 
     sys.modules["micropython"] = FakeMicropython
+    print("Implementation: " + sys.implementation.name)
+    sys.implementation.name = "micropython"
+    print("Implementation is now: " + sys.implementation.name)
 
 def patch_filesystem():
     # New apps are downloaded to /apps and /backgrounds
@@ -162,6 +165,7 @@ class FakeCtx:
         self.position = (0, 0)
         self._translate = (0, 0)
         self._saves = []
+        self._gradient = None
 
         self._canvas = pydom["#screen canvas"][0]
         self._ctx = self._canvas._js.getContext("2d")
@@ -229,13 +233,46 @@ class FakeCtx:
 
     def rectangle(self, x, y, w, h):
         ctx = self._ctx
-
-        ctx.fillStyle = self.color
-        ctx.strokeStyle = self.color
+        if not self._gradient:
+            ctx.fillStyle = self.color
+            ctx.strokeStyle = self.color
         ctx.beginPath()
         ctx.rect(self._x_to_web(x), self._y_to_web(y), w * self.scale, h * self.scale)
         ctx.stroke()
 
+        return self
+
+    def image(self, path, x, y, w, h):
+        import base64
+
+        with open(path, "rb") as f:
+            data = f.read()
+        if path.endswith(".jpg") or path.endswith(".jpeg"):
+            encoded = base64.b64encode(data).decode("utf-8")
+            src = "data:image/jpeg;base64," + encoded
+        elif path.endswith(".png"):
+            encoded = base64.b64encode(data).decode("utf-8")
+            src = "data:image/png;base64," + encoded
+        else:
+            print("Unsupported image format:", path)
+            return self
+        img = document.createElement("img")
+        img.src = src
+
+        ctx = self._ctx
+        ctx.drawImage(img, self._x_to_web(x), self._y_to_web(y), w * self.scale, h * self.scale)
+        return self
+
+    def linear_gradient(self, x0, y0, x1, y1):
+        ctx = self._ctx
+        gradient = ctx.createLinearGradient(self._x_to_web(x0), self._y_to_web(y0), self._x_to_web(x1), self._y_to_web(y1))
+        self._gradient = gradient
+        return self
+
+    def add_stop(self, offset, color, alpha):
+        if self._gradient:
+            # FIXME: We should add alpha to tuple and use rgba()
+            self._gradient.addColorStop(offset, "rgb" + str(color))
         return self
 
     def fill(self):
