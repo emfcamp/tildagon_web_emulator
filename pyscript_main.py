@@ -49,10 +49,11 @@ async def monkey_patch_http():
 
     import requests
 
-    # Ok, now we need to route requests through our proxy URL
+    # We rewrite requests via a CORS proxy because otherwise we can't fetch
+    # tarballs from github/etc
     def get(url, *args, **kwargs):
         print("Requests.get(", url, args, kwargs, ")")
-        url = "http://localhost:8000/proxy/" + url
+        url = "https://api.codetabs.com/v1/proxy?quest=" + url
         print("Request rewritten to", url)
         try:
             return requests.real_get(url, *args, **kwargs)
