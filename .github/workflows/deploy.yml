@@ -1,7 +1,11 @@
 name: Build and Deploy
-on: [push]
+on: 
+  push:
+    branches:
+      - main
+
 permissions:
-  contents: write
+  contents: read
 jobs:
   build:
     runs-on: ubuntu-latest
