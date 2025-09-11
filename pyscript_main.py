@@ -26,25 +26,30 @@ def monkey_patch_micropython():
     sys.implementation.name = "micropython"
     print("Implementation is now: " + sys.implementation.name)
 
+
 def patch_filesystem():
     # New apps are downloaded to /apps and /backgrounds
     # It's hardcoded. We need to make sure files out of those
     # directories are importable.
     import os
+
     os.mkdir("/apps")
     os.symlink("/apps", "/home/pyodide/apps")
 
     os.mkdir("/backgrounds")
     os.symlink("/backgrounds", "/home/pyodide/backgrounds")
 
+
 async def monkey_patch_http():
     # requests doesn't work in pyscript without this voodoo
 
     import micropip
+
     await micropip.install("pyodide-http")
     await micropip.install("requests")
 
     import pyodide_http
+
     pyodide_http.patch_all()
 
     import requests
@@ -67,8 +72,10 @@ async def monkey_patch_http():
 
 def monkey_patch_sys():
     if not hasattr(sys, "print_exception"):
+
         def print_exception(e, file):
             print("Exception:", e, file=file)
+
         sys.print_exception = print_exception
 
 
@@ -152,7 +159,7 @@ class FakeCtx:
     def __init__(self):
         self.width = 240
         self.height = 240
-        self.scale = 3   # The number of web pixels per "display" pixel
+        self.scale = 1  # The number of web pixels per "display" pixel
         self.border = 10
 
         self.font_size = 8
@@ -162,7 +169,7 @@ class FakeCtx:
         self.RIGHT = 3
         self.MIDDLE = 4
 
-        self.color = "rgb(0, 255, 0)"   # FIXME: find what the default color is
+        self.color = "rgb(0, 255, 0)"  # FIXME: find what the default color is
         self.position = (0, 0)
         self._translate = (0, 0)
         self._saves = []
@@ -173,9 +180,9 @@ class FakeCtx:
 
         self._ctx.beginPath()
         self._ctx.arc(
-            (3 * self.width + 2 * self.border) / 2,
-            (3 * self.height + 2 * self.border) / 2,
-            (3 * self.width) / 2,
+            (self.scale * self.width + 2 * self.border) / 2,
+            (self.scale * self.height + 2 * self.border) / 2,
+            (self.scale * self.width) / 2,
             0,
             2 * math.pi,
         )
@@ -213,11 +220,11 @@ class FakeCtx:
         if len(self._saves) > 0:
             return self._saves.pop()
         else:
-#            print("Warning: restore() called with no matching save()")
+            #            print("Warning: restore() called with no matching save()")
             return self
 
     def move_to(self, x, y):
-#        print("ctx.move_to(%s, %s)" % (x, y))
+        #        print("ctx.move_to(%s, %s)" % (x, y))
         new = self.clone()
         new.position = (x, y)
         return new
@@ -261,12 +268,19 @@ class FakeCtx:
         img.src = src
 
         ctx = self._ctx
-        ctx.drawImage(img, self._x_to_web(x), self._y_to_web(y), w * self.scale, h * self.scale)
+        ctx.drawImage(
+            img, self._x_to_web(x), self._y_to_web(y), w * self.scale, h * self.scale
+        )
         return self
 
     def linear_gradient(self, x0, y0, x1, y1):
         ctx = self._ctx
-        gradient = ctx.createLinearGradient(self._x_to_web(x0), self._y_to_web(y0), self._x_to_web(x1), self._y_to_web(y1))
+        gradient = ctx.createLinearGradient(
+            self._x_to_web(x0),
+            self._y_to_web(y0),
+            self._x_to_web(x1),
+            self._y_to_web(y1),
+        )
         self._gradient = gradient
         return self
 
@@ -285,7 +299,7 @@ class FakeCtx:
         return self
 
     def text_width(self, text):
-#        print("Not properly implemented: FakeCtx: text_width(%s)" % text)
+        #        print("Not properly implemented: FakeCtx: text_width(%s)" % text)
         return len(text) * 8
 
     def text(self, text):
@@ -294,7 +308,7 @@ class FakeCtx:
         ctx.fillStyle = self.color
         ctx.font = f"{8 * self.scale}px sans-serif"
         x, y = self.position
-#        print("Drawing text at", self._x_to_web(x), self._y_to_web(y), "in color", self.color)
+        #        print("Drawing text at", self._x_to_web(x), self._y_to_web(y), "in color", self.color)
         ctx.fillText(text, self._x_to_web(x), self._y_to_web(y))
         ctx.restore()
 
@@ -325,7 +339,7 @@ def monkey_patch_display():
 
         @staticmethod
         def end_frame(ctx):
-#            print("Not implemented: FakeDisplay: end_frame()")
+            #            print("Not implemented: FakeDisplay: end_frame()")
             pass
 
     sys.modules["display"] = FakeDisplay
@@ -355,6 +369,7 @@ def monkey_patch_machine():
         pass
 
     from types import ModuleType
+
     m = ModuleType("machine")
     sys.modules[m.__name__] = m
 
@@ -365,6 +380,7 @@ def monkey_patch_machine():
 
 def monkey_patch_tildagon():
     from types import ModuleType
+
     m = ModuleType("tildagon")
     sys.modules[m.__name__] = m
 
@@ -388,6 +404,7 @@ def monkey_patch_tildagon():
 
 def monkey_patch_ePin():
     from types import ModuleType
+
     m = ModuleType("egpio")
     sys.modules[m.__name__] = m
 
@@ -449,7 +466,7 @@ def monkey_patch_neopixel():
             if item > self.length:
                 print("FakeNeoPixel: Ignoring setitem out of range", item)
             else:
-                self.rgb[item-1] = value
+                self.rgb[item - 1] = value
 
     class FakeNeoPixelModule:
         NeoPixel = FakeNeoPixel
@@ -479,8 +496,8 @@ async def badge():
     ctx = canvas._js.getContext("2d")
 
     # Set the canvas size
-    width = 3 * resolution_x + 2 * border
-    height = 3 * resolution_y + 2 * border
+    width = 1 * resolution_x + 2 * border
+    height = 1 * resolution_y + 2 * border
 
     canvas.style["width"] = f"{width}px"
     canvas.style["height"] = f"{height}px"
@@ -491,9 +508,9 @@ async def badge():
     ctx.fillStyle = "rgb(0 100 0)"
     ctx.beginPath()
     ctx.arc(
-        (3 * resolution_x + 2 * border) / 2,
-        (3 * resolution_y + 2 * border) / 2,
-        (3 * resolution_x + 2 * border) / 2,
+        (1 * resolution_x + 2 * border) / 2,
+        (1 * resolution_y + 2 * border) / 2,
+        (1 * resolution_x + 2 * border) / 2,
         0,
         2 * math.pi,
     )
@@ -504,9 +521,9 @@ async def badge():
     ctx.fillStyle = "rgb(0 0 0)"
     ctx.beginPath()
     ctx.arc(
-        (3 * resolution_x + 2 * border) / 2,
-        (3 * resolution_y + 2 * border) / 2,
-        (3 * resolution_x) / 2,
+        (1 * resolution_x + 2 * border) / 2,
+        (1 * resolution_y + 2 * border) / 2,
+        (1 * resolution_x) / 2,
         0,
         2 * math.pi,
     )
@@ -525,15 +542,17 @@ async def button_handler(event):
     from system.eventbus import eventbus
     from frontboards.twentyfour import BUTTONS
     from events.input import ButtonDownEvent, ButtonUpEvent
+
     print("Emitting ButtonDownEvent for button", BUTTONS[event.target.id])
     await eventbus.emit_async(ButtonDownEvent(button=BUTTONS[event.target.id]))
 
+
 @create_proxy
 async def on_key_down(event):
-
     from system.eventbus import eventbus
     from frontboards.twentyfour import BUTTONS
     from events.input import ButtonDownEvent, ButtonUpEvent
+
     match event.key:
         case "ArrowUp":
             print("Emitting ButtonDownEvent for button A")
@@ -574,5 +593,6 @@ async def start_tildagon_os():
 
 async def main():
     _ = await asyncio.gather(badge())
+
 
 asyncio.ensure_future(main())
