@@ -441,6 +441,20 @@ def monkey_patch_ePin():
     sys.modules["egpio.ePin"] = FakeEPin
 
 
+def neopixel_rgb_to_canvas_style(values):
+    r, g, b = values
+    if r > 1:
+        r /= 255
+    if g > 1:
+        g /= 255
+    if b > 1:
+        b /= 255
+    r = min(1.0, max(0.0, r))
+    g = min(1.0, max(0.0, g))
+    b = min(1.0, max(0.0, b))
+    return f"color(srgb {pow(r, 1 / 2.2)} {pow(g, 1 / 2.2)} {pow(b, 1 / 2.2)})"
+
+
 def monkey_patch_neopixel():
     class FakeNeoPixel:
         def __init__(self, *args, **kwargs):
@@ -451,8 +465,7 @@ def monkey_patch_neopixel():
             for led in range(self.length):
                 canvas = pydom[f"#led{led} canvas"][0]
                 ctx = canvas._js.getContext("2d")
-                style = f"rgb({self.rgb[led][0]} {self.rgb[led][1]} {self.rgb[led][2]})"
-                ctx.fillStyle = style
+                ctx.fillStyle = neopixel_rgb_to_canvas_style(self.rgb[led])
                 ctx.beginPath()
                 ctx.arc(10, 10, 10, 0, 2 * math.pi)
                 ctx.fill()
@@ -479,17 +492,8 @@ async def badge():
     resolution_y = 240
     border = 10
 
-    # FIXME: for now draw leds as a grey circle
-    #        - we need to lay them out properly in the HTML
-    #        - we need to hook them up to the code
     for led in range(6):
         canvas = pydom[f"#led{led} canvas"][0]
-        ctx = canvas._js.getContext("2d")
-        ctx.fillStyle = "rgb(100 100 100)"
-        ctx.beginPath()
-        ctx.arc(10, 10, 5, 0, 2 * math.pi)
-        ctx.fill()
-        ctx.closePath()
         canvas.style["display"] = "block"
 
     canvas = pydom["#screen canvas"][0]
