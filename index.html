@@ -33,11 +33,91 @@
       }
 
       @keyframes spin {
-      to {
-        transform: rotate(360deg);
+        to {
+          transform: rotate(360deg);
+        }
       }
-    }
-  </style>
+
+      #screen {
+        position: absolute;
+        top: 237px;
+        left: 242px;
+      }
+
+      #led0 {
+        margin: -10px -10px;
+        position: absolute;
+        left: 443px;
+        top: 90px;
+      }
+      #led1 {
+        position: absolute;
+        margin: -10px -10px;
+        left: 573px;
+        top: 163px;
+      }
+      #led2{
+        position: absolute;
+        margin: -10px -10px;
+        left: 646px;
+        top: 293px;
+      }
+      #led3{
+        position: absolute;
+        margin: -10px -10px;
+        left: 646px;
+        top: 440px;
+      }
+      #led4{
+        position: absolute;
+        margin: -10px -10px;
+        left: 573px;
+        top: 566px;
+      }
+      #led5{
+        position: absolute;
+        margin: -10px -10px;
+        left: 443px;
+        top: 640px;
+      }
+
+      #led6{
+        position: absolute;
+        margin: -10px -10px;
+        left: 296px;
+        top: 640px;
+      }
+      #led7{
+        position: absolute;
+        margin: -10px -10px;
+        left: 173px;
+        top: 566px;
+      }
+      #led8{
+        position: absolute;
+        margin: -10px -10px;
+        left: 93px;
+        top: 440px;
+      }
+      #led9{
+        position: absolute;
+        margin: -10px -10px;
+        left: 93px;
+        top: 293px;
+      }
+      #led10{
+        position: absolute;
+        margin: -10px -10px;
+        left: 173px;
+        top: 163px;
+      }
+      #led11{
+        margin: -10px -10px;
+        position: absolute;
+        left: 296px;
+        top: 90px;
+      }
+    </style>
   </head>
 
   <body>
@@ -45,46 +125,48 @@
       <h1>Loading...</h1>
     </dialog>
 
-    <section class="pyscript">
+
+    <section class="pyscript" style="position: relative">
+      <div id="badge"><img src="background.png"></img></div>
       <div style="display: flex; flex-direction: column; gap: 1em; width: 600px;">
         <div id="led0">
-          <canvas id="led0" width=20 height=20></canvas>
+          <canvas width=20 height=20></canvas>
         </div>
         <div id="led1">
-          <canvas id="led1" width=20 height=20></canvas>
+          <canvas width=20 height=20></canvas>
         </div>
         <div id="led2">
-          <canvas id="led2" width=20 height=20></canvas>
+          <canvas width=20 height=20></canvas>
         </div>
         <div id="led3">
-          <canvas id="led3" width=20 height=20></canvas>
+          <canvas width=20 height=20></canvas>
         </div>
         <div id="led4">
-          <canvas id="led4" width=20 height=20></canvas>
+          <canvas width=20 height=20></canvas>
         </div>
         <div id="led5">
-          <canvas id="led5" width=20 height=20></canvas>
+          <canvas width=20 height=20></canvas>
         </div>
         <div id="led6">
-          <canvas id="led6" width=20 height=20></canvas>
+          <canvas width=20 height=20></canvas>
         </div>
         <div id="led7">
-          <canvas id="led7" width=20 height=20></canvas>
+          <canvas width=20 height=20></canvas>
         </div>
         <div id="led8">
-          <canvas id="led8" width=20 height=20></canvas>
+          <canvas width=20 height=20></canvas>
         </div>
         <div id="led9">
-          <canvas id="led9" width=20 height=20></canvas>
+          <canvas width=20 height=20></canvas>
         </div>
         <div id="led10">
-          <canvas id="led10" width=20 height=20></canvas>
+          <canvas width=20 height=20></canvas>
         </div>
         <div id="led11">
-          <canvas id="led11" width=20 height=20></canvas>
+          <canvas width=20 height=20></canvas>
         </div>
       </div>
-      
+
       <div id="buttons">
         <button id="A" py-click="button_handler">Button A</button>
         <button id="B" py-click="button_handler">Button B</button>
