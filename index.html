@@ -270,7 +270,7 @@
         const loading = document.getElementById('loading');
         loading.showModal();
 
-        const mp = await loadMicroPython();
+        const mp = await loadMicroPython({ heapsize: 2.5 * 1024 * 1024 });
         const FS = mp.FS;
 
         // Create directories for user-installed apps/backgrounds
