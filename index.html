@@ -251,10 +251,9 @@
         (async () => {
           try {
             const r = await fetch(url, opts);
-            const text = await r.text();
-            _fetches[id] = JSON.stringify({ status: r.status, body: text });
+            _fetches[id] = { status: r.status, body: new Uint8Array(await r.arrayBuffer()) };
           } catch (e) {
-            _fetches[id] = JSON.stringify({ status: 0, body: String(e) });
+            _fetches[id] = { status: 0, body: new TextEncoder().encode(String(e)) };
           }
         })();
         return id;
