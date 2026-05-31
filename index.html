@@ -5,12 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
 
-    <!-- PyScript CSS -->
-    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
-
-    <!-- This script tag bootstraps PyScript -->
-    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
-
     <!-- This script is a hack to work around the inability to set CORS headers on github pages -->
     <script src="coi-serviceworker.js"></script>
 
@@ -30,6 +24,10 @@
 
       canvas {
         display: none;
+      }
+
+      #c {
+        display: block;
       }
 
       @keyframes spin {
@@ -123,10 +121,11 @@
   <body>
     <dialog id="loading">
       <h1>Loading...</h1>
+      <div class="loading"></div>
     </dialog>
 
 
-    <section class="pyscript" style="position: relative">
+    <section style="position: relative">
       <div id="badge"><img src="background.png"></img></div>
       <div style="display: flex; flex-direction: column; gap: 1em; width: 600px;">
         <div id="led0">
@@ -168,21 +167,161 @@
       </div>
 
       <div id="buttons">
-        <button id="A" py-click="button_handler">Button A</button>
-        <button id="B" py-click="button_handler">Button B</button>
-        <button id="C" py-click="button_handler">Button C</button>
-        <button id="D" py-click="button_handler">Button D</button>
-        <button id="E" py-click="button_handler">Button E</button>
-        <button id="F" py-click="button_handler">Button F</button>
+        <button onclick="pressButton('A')">Button A</button>
+        <button onclick="pressButton('B')">Button B</button>
+        <button onclick="pressButton('C')">Button C</button>
+        <button onclick="pressButton('D')">Button D</button>
+        <button onclick="pressButton('E')">Button E</button>
+        <button onclick="pressButton('F')">Button F</button>
       </div>
 
       <div id="screen">
-        <canvas></canvas>
+        <!-- id="c" is targetted by the ctx WASM for output -->
+        <canvas id="c" width="240" height="240"></canvas>
       </div>
 
-      <script type="py" src="./pyscript_main.py" config="./pyscript.toml"></script>
     </section>
+
+    <script>
+      // Required by ctx
+      window.windowToCanvas = function (canvas, x, y) {
+        var rect = canvas.getBoundingClientRect();
+        return {
+          x: (x - rect.left) * (canvas.width  / rect.width),
+          y: (y - rect.top)  * (canvas.height / rect.height),
+        };
+      };
+    </script>
+
+    <script type="module">
+      import { loadMicroPython } from './micropython.mjs';
+
+      // getBadgeButtonStates() is called by _sim.py every 0.1s
+      const buttonStates = [0, 0, 0, 0, 0, 0];
+      window.getBadgeButtonStates = () => buttonStates.join(',');
+
+      function pressButton(id) {
+        const idx = 'ABCDEF'.indexOf(id);
+        if (idx === -1) return;
+        buttonStates[idx] = 1;
+        setTimeout(() => { buttonStates[idx] = 0; }, 150);
+      }
+      window.pressButton = pressButton;
+
+      document.addEventListener('keydown', (e) => {
+        switch (e.key) {
+          case 'ArrowUp':    pressButton('A'); break;
+          case 'ArrowRight': pressButton('B'); break;
+          case 'Enter':      pressButton('C'); break;
+          case 'ArrowDown':  pressButton('D'); break;
+          case 'ArrowLeft':  pressButton('E'); break;
+          case 'Escape':     pressButton('F'); break;
+        }
+      });
+
+
+      window.updateLed = function (index, r, g, b) {
+        const toLinear = v => v > 1 ? v / 255 : v;
+        const toGamma  = v => Math.pow(Math.min(1, Math.max(0, v)), 1 / 2.2);
+        const canvas = document.querySelector(`#led${index} canvas`);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        canvas.style.display = 'block';
+        ctx.fillStyle = `color(srgb ${toGamma(toLinear(r))} ${toGamma(toLinear(g))} ${toGamma(toLinear(b))})`;
+        ctx.beginPath();
+        ctx.arc(10, 10, 10, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.closePath();
+      };
+
+
+      // Micropython SHOULD be able to await on javascript promises directly
+      // since 1.27 but for the life of me I can't get it to work and ended up in
+      // a twisty maze of micropython async bugs. Instead we patch requests
+      // to trigger a fetch in javascript land, then it polls for the fetch to
+      // complete. Ugly but it works.
+      const _fetches = {};
+      let _fetchSeq = 0;
+      window.mp_fetch_start = function (url, method, body, contentType) {
+        const id = ++_fetchSeq;
+        const opts = { method: method || 'GET' };
+        if (body != null) opts.body = body;
+        if (contentType) opts.headers = { 'Content-Type': contentType };
+        _fetches[id] = null;
+        (async () => {
+          try {
+            const r = await fetch(url, opts);
+            const text = await r.text();
+            _fetches[id] = JSON.stringify({ status: r.status, body: text });
+          } catch (e) {
+            _fetches[id] = JSON.stringify({ status: 0, body: String(e) });
+          }
+        })();
+        return id;
+      };
+      window.mp_fetch_poll = function (id) {
+        const result = _fetches[id];
+        if (result === null) return null;
+        delete _fetches[id];
+        return result;
+      };
+
+
+      async function boot() {
+        const loading = document.getElementById('loading');
+        loading.showModal();
+
+        const mp = await loadMicroPython();
+        const FS = mp.FS;
+
+        // Create directories for user-installed apps/backgrounds
+        for (const d of ['/apps', '/backgrounds']) {
+          try { FS.mkdir(d); } catch (_) {}
+        }
+
+        // Badge python firmware is frozen into the WASM binary so we override
+        // things to make them compatible with the browser environment
+        const files = [
+          ['fakes/_sim.py',                                 '/_sim.py'],
+          ['fakes/_thread.py',                              '/_thread.py'],
+          ['fakes/async_helpers.py',                        '/async_helpers.py'],
+          ['fakes/boot.py',                                 '/boot.py'],
+          ['fakes/display.py',                              '/display.py'],
+          ['fakes/leds.py',                                 '/leds.py'],
+          ['fakes/tildagon_helpers.py',                     '/tildagon_helpers.py'],
+          ['fakes/usocket.py',                              '/socket.py'],
+          ['fakes/usocket.py',                              '/usocket.py'],
+          ['badge-2024-software/sim/fakes/egpio.py',        '/egpio.py'],
+          ['badge-2024-software/sim/fakes/esp32.py',        '/esp32.py'],
+          ['badge-2024-software/sim/fakes/imu.py',          '/imu.py'],
+          ['badge-2024-software/sim/fakes/machine.py',      '/machine.py'],
+          ['badge-2024-software/sim/fakes/neopixel.py',     '/neopixel.py'],
+          ['badge-2024-software/sim/fakes/network.py',      '/network.py'],
+          ['badge-2024-software/sim/fakes/ota.py',          '/ota.py'],
+          ['badge-2024-software/sim/fakes/pd.py',           '/pd.py'],
+          ['badge-2024-software/sim/fakes/power.py',        '/power.py'],
+          ['badge-2024-software/sim/fakes/power_event.py',  '/power_event.py'],
+          ['badge-2024-software/sim/fakes/vfs.py',          '/vfs.py'],
+        ];
+
+        await Promise.all(files.map(async ([url, dest]) => {
+          const r = await fetch(url);
+          if (!r.ok) throw new Error(`fetch ${url} → ${r.status}`);
+          FS.writeFile(dest, await r.text());
+        }));
+
+        loading.close();
+
+        // boot.py applies patches before we start the full app
+        await mp.runPythonAsync('import boot; import main');
+      }
+
+      boot().catch(err => {
+        console.error('Boot failed:', err);
+        document.getElementById('loading').innerHTML =
+          `<h1>Load error</h1><pre>${err}</pre>`;
+      });
+    </script>
 
   </body>
 </html>
-
