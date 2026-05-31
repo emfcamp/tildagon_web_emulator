@@ -235,6 +235,38 @@
       };
 
 
+      // If we're on a phone or something with an accelerometer we can feed the
+      // IMU real data, otherwise we pretend to be on a perfectly flat surface
+      const acc = [0.0, 0.0, 9.81];
+      window.getAccelerometerData = () => acc;
+
+      function onDeviceMotion(e) {
+        const a = e.accelerationIncludingGravity;
+        if (a) {
+          acc[0] = a.x ?? 0;
+          acc[1] = a.y ?? 0;
+          acc[2] = a.z ?? 9.81;
+        }
+      }
+
+      function startAccelerometer() {
+        window.addEventListener('devicemotion', onDeviceMotion);
+      }
+
+      if (window.DeviceMotionEvent) {
+        if (typeof DeviceMotionEvent.requestPermission === 'function') {
+          // iOS 13+ requires a user gesture before granting access
+          document.addEventListener('click', async () => {
+            if (await DeviceMotionEvent.requestPermission() === 'granted') {
+              startAccelerometer();
+            }
+          }, { once: true });
+        } else {
+          startAccelerometer();
+        }
+      }
+
+
       // Micropython SHOULD be able to await on javascript promises directly
       // since 1.27 but for the life of me I can't get it to work and ended up in
       // a twisty maze of micropython async bugs. Instead we patch requests
@@ -292,7 +324,7 @@
           ['fakes/usocket.py',                              '/usocket.py'],
           ['fakes/egpio.py',                                '/egpio.py'], // This should be from badge-2024-software but the patch isn't merged yet so we've got our own special copy
           ['badge-2024-software/sim/fakes/esp32.py',        '/esp32.py'],
-          ['badge-2024-software/sim/fakes/imu.py',          '/imu.py'],
+          ['fakes/imu.py',                                  '/imu.py'],
           ['badge-2024-software/sim/fakes/machine.py',      '/machine.py'],
           ['badge-2024-software/sim/fakes/neopixel.py',     '/neopixel.py'],
           ['badge-2024-software/sim/fakes/network.py',      '/network.py'],
