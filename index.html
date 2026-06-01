@@ -196,6 +196,10 @@
     <script type="module">
       import { loadMicroPython } from './micropython.mjs';
 
+      // URL fragment is used for Autostart
+      const _fragment = decodeURIComponent(window.location.hash.slice(1));
+      window.getFragment = () => _fragment || null;
+
       // getBadgeButtonStates() is called by _sim.py every 0.1s
       const buttonStates = [0, 0, 0, 0, 0, 0];
       window.getBadgeButtonStates = () => buttonStates.join(',');
@@ -324,6 +328,7 @@
           ['fakes/_sim.py',                                 '/_sim.py'],
           ['fakes/_thread.py',                              '/_thread.py'],
           ['fakes/async_helpers.py',                        '/async_helpers.py'],
+          ['fakes/autostart.py',                            '/autostart.py'],
           ['fakes/boot.py',                                 '/boot.py'],
           ['fakes/display.py',                              '/display.py'],
           ['fakes/leds.py',                                 '/leds.py'],
