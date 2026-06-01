@@ -4,7 +4,9 @@ class _Buttons:
     @staticmethod
     def state():
         try:
-            return [int(x) for x in str(_js.getBadgeButtonStates()).split(',')]
+            raw = str(_js.getBadgeButtonStates()).split(',')
+            from frontboards.twentyfour import TwentyTwentyFour
+            return [int(raw['ABCDEF'.index(k)]) for k in TwentyTwentyFour.button_states.keys()]
         except Exception:
             return [0, 0, 0, 0, 0, 0]
 
