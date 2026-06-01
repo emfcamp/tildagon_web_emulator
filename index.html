@@ -237,8 +237,10 @@
 
       // If we're on a phone or something with an accelerometer we can feed the
       // IMU real data, otherwise we pretend to be on a perfectly flat surface
-      const acc = [0.0, 0.0, 9.81];
+      const acc  = [0.0, 0.0, 9.81];
+      const gyro = [0.0, 0.0, 0.0];
       window.getAccelerometerData = () => acc;
+      window.getGyroscopeData = () => gyro;
 
       function onDeviceMotion(e) {
         const a = e.accelerationIncludingGravity;
@@ -246,6 +248,12 @@
           acc[0] = a.x ?? 0;
           acc[1] = a.y ?? 0;
           acc[2] = a.z ?? 9.81;
+        }
+        const r = e.rotationRate;
+        if (r) {
+          gyro[0] = r.beta  ?? 0;
+          gyro[1] = r.gamma ?? 0;
+          gyro[2] = r.alpha ?? 0;
         }
       }
 

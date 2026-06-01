@@ -13,7 +13,8 @@ def gyro_read():
     """
     Returns current x, y, z rotation rate in degrees/s.
     """
-    return (0.0, 0.0, 0.0)
+    g = js.getGyroscopeData()
+    return (float(g[0]), float(g[1]), float(g[2]))
 
 
 def pressure_read():
