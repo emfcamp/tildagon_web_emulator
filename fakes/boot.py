@@ -37,4 +37,6 @@ requests.request = _request
 
 import asyncio
 from autostart import autostart
+from _keyboard import keyboard_task
 asyncio.create_task(autostart())
+asyncio.create_task(keyboard_task())
