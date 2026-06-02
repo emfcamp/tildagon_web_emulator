@@ -36,10 +36,15 @@
         }
       }
 
+      #badge {
+        position: relative;
+        z-index: 1;
+      }
+
       #screen {
         position: absolute;
-        top: 237px;
-        left: 242px;
+        top: 247px;
+        left: 252px;
       }
 
       #led0 {
@@ -126,6 +131,10 @@
 
 
     <section style="position: relative">
+      <div id="screen">
+        <!-- id="c" is targetted by the ctx WASM for output -->
+        <canvas id="c" width="240" height="240"></canvas>
+      </div>
       <div id="badge"><img src="background.png"></img></div>
       <div style="display: flex; flex-direction: column; gap: 1em; width: 600px;">
         <div id="led0">
@@ -175,10 +184,6 @@
         <button onclick="pressButton('F')">F 🔙</button>
       </div>
 
-      <div id="screen">
-        <!-- id="c" is targetted by the ctx WASM for output -->
-        <canvas id="c" width="240" height="240"></canvas>
-      </div>
 
     </section>
 
