@@ -217,6 +217,23 @@
       }
       window.pressButton = pressButton;
 
+      const keyboardQueue = [];
+      window.getKeyboardEvent = () => keyboardQueue.length ? keyboardQueue.shift() : null;
+
+      const KEY_MAP = {
+        ' ': 'SPACE', 'Backspace': 'BACKSPACE', 'Enter': 'ENTER',
+        'Escape': 'ESCAPE', 'Shift': 'SHIFT', 'Control': 'CTRL', 'Alt': 'ALT',
+        'ArrowUp': 'UP', 'ArrowDown': 'DOWN', 'ArrowLeft': 'LEFT', 'ArrowRight': 'RIGHT',
+      };
+
+      function kbdKey(e) {
+        if (KEY_MAP[e.key]) return KEY_MAP[e.key];
+        if (e.key.length === 1) return /[a-zA-Z]/.test(e.key) ? e.key.toUpperCase() : e.key;
+        return null;
+      }
+
+      const BADGE_BUTTON_KEYS = new Set(['ArrowUp', 'ArrowRight', 'Enter', 'ArrowDown', 'ArrowLeft', 'Escape']);
+
       document.addEventListener('keydown', (e) => {
         switch (e.key) {
           case 'ArrowUp':    pressButton('A'); break;
@@ -225,6 +242,17 @@
           case 'ArrowDown':  pressButton('D'); break;
           case 'ArrowLeft':  pressButton('E'); break;
           case 'Escape':     pressButton('F'); break;
+        }
+        if (!BADGE_BUTTON_KEYS.has(e.key)) {
+          const key = kbdKey(e);
+          if (key) keyboardQueue.push('down:' + key);
+        }
+      });
+
+      document.addEventListener('keyup', (e) => {
+        if (!BADGE_BUTTON_KEYS.has(e.key)) {
+          const key = kbdKey(e);
+          if (key) keyboardQueue.push('up:' + key);
         }
       });
 
@@ -335,6 +363,7 @@
           ['fakes/async_helpers.py',                        '/async_helpers.py'],
           ['fakes/autostart.py',                            '/autostart.py'],
           ['fakes/boot.py',                                 '/boot.py'],
+          ['fakes/_keyboard.py',                            '/_keyboard.py'],
           ['fakes/display.py',                              '/display.py'],
           ['fakes/leds.py',                                 '/leds.py'],
           ['fakes/tildagon_helpers.py',                     '/tildagon_helpers.py'],
